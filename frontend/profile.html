@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - UniRiders</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <div class="profile-card">
+        <form id="updateProfileForm">
+            
+            <div class="profile-photo-container">
+                <img id="profile-pic" src="/img/default_avatar.jpg" alt="Foto de Perfil">
+                
+                <input type="file" id="photo-upload" accept="image/*" style="display: none;">
+                
+                <label for="photo-upload" class="upload-button">
+                    <i class="fas fa-camera"></i>
+                </label>
+            </div>
+
+            <h2 id="profileName">Cargando perfil...</h2>
+            <p id="currentRole" style="color: #666; margin-bottom: 20px; font-size: 0.9em;"></p>
+            
+            <!-- Agregar después del nombre del perfil -->
+            <div class="rating-display">
+                <div class="stars">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                </div>
+                <span id="ratingValue">0.0</span>
+            </div>
+            
+            <hr style="border: 1px solid #f0f0f0; margin: 20px 0;">
+
+            <div class="input-container">
+                <i class="fas fa-user icon"></i>
+                <input type="text" id="name" placeholder="Nombre completo" required>
+            </div>
+            
+            <div class="input-container">
+                <i class="fas fa-envelope icon"></i>
+                <input type="email" id="email" placeholder="Correo electrónico" readonly>
+            </div>
+            
+            <div class="field-group">
+                <div class="input-container">
+                    <i class="fas fa-money-bill-wave icon"></i>
+                    <select id="paymentMethod" required>
+                        <option value="">Método de Pago Preferido</option>
+                        <option value="Efectivo">Efectivo</option>
+                        <option value="tarjeta">Transferencia</option>
+                    </select>
+                </div>
+                <div class="input-container">
+                    <i class="fas fa-users-gear icon"></i>
+                    <select id="roleSwitch">
+                        <option value="pasajero">Pasajero</option>
+                        <option value="conductor">Conductor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-container">
+                <i class="fas fa-lock icon"></i>
+                <input type="password" id="password" placeholder="Nueva Contraseña (dejar vacío para no cambiar)">
+            </div>
+            <div class="input-container">
+                <i class="fas fa-lock icon"></i>
+                <input type="password" id="confirmPassword" placeholder="Confirmar Contraseña">
+            </div>
+
+            <h3 id="vehicleHeader" style="display:none; margin-top: 20px; color: var(--color-azul);">
+                <i class="fas fa-car-side"></i> Datos del Vehículo
+            </h3>
+            
+            <div id="vehicleFields" style="display:none;">
+                <div class="input-container">
+                    <i class="fas fa-car icon"></i>
+                    <input type="text" id="marca" placeholder="Marca (ej. Toyota)">
+                </div>
+                <div class="input-container">
+                    <i class="fas fa-code-fork icon"></i> 
+                    <input type="text" id="modelo" placeholder="Modelo (ej. Corolla)">
+                </div>
+                <div class="input-container">
+                    <i class="fas fa-id-card icon"></i> 
+                    <input type="text" id="placa" placeholder="Placa (ej. ABC-123)">
+                </div>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                <i class="fas fa-save"></i> Guardar Cambios
+            </button>
+        </form>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script src="profile.js"></script>
+
+    <style>
+        .rating-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0;
+        }
+
+        .stars {
+            color: #ffd700;
+        }
+
+        .stars i {
+            margin: 0 2px;
+        }
+
+        .stars i.active {
+            color: #ffd700;
+        }
+
+        .stars i.inactive {
+            color: #e0e0e0;
+        }
+
+        #ratingValue {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #666;
+        }
+    </style>
+</body>
+</html>

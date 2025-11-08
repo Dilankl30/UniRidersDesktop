@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniRiders - Pasajero Premium 👤</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        /* Estilos específicos de la aplicación de Pasajero */
+        :root {
+            --color-rojo-claro: #ff4d4d;
+            --color-verde-espoch: #4CAF50;
+            --color-azul: #0072ff;
+            --color-oro: #FFD700;
+        }
+
+        body {
+            background: linear-gradient(135deg, #00c6ff, var(--color-azul));
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            text-align: center;
+            overflow-y: auto;
+            padding: 20px 0;
+        }
+
+        .main-panel {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px; 
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            margin-bottom: 20px;
+        }
+
+        /* GPS / Mapa Leaflet */
+        #map {
+            width: 100%;
+            height: 300px;
+            background-color: #f0f0f0;
+            margin-top: 20px;
+            border-radius: 15px;
+            display: none; 
+        }
+        #map.active {
+            display: block;
+        }
+
+        .search-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .search-form input, .search-form select, .search-btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 16px;
+        }
+        .search-btn {
+            background: var(--color-verde-espoch);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+        .search-btn:disabled {
+            background: #888;
+            cursor: not-allowed;
+        }
+        .message-area {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+            font-weight: 600;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .logout-btn {
+            background: white;
+            color: var(--color-azul);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 30px;
+            transition: 0.3s;
+        }
+        .profile-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: transform 0.3s;
+        }
+
+        /* Chat - ESTILOS MEJORADOS */
+        .chat-container {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+            display: none; 
+            position: relative;
+        }
+        .chat-container.active {
+            display: block;
+        }
+
+        #chatMessages {
+            max-height: 200px;
+            min-height: 150px;
+            overflow-y: auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Estilos mejorados para los mensajes del chat */
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 80%;
+            word-wrap: break-word;
+            animation: fadeIn 0.3s ease-in;
+            transition: all 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .chat-message.self {
+            background: rgba(0, 200, 0, 0.2);
+            margin-left: auto;
+            text-align: right;
+            border-bottom-right-radius: 2px;
+            border: 1px solid rgba(0, 200, 0, 0.3);
+        }
+
+        .chat-message.other {
+            background: rgba(0, 100, 255, 0.2);
+            margin-right: auto;
+            text-align: left;
+            border-bottom-left-radius: 2px;
+            border: 1px solid rgba(0, 100, 255, 0.3);
+        }
+
+        .chat-message.system {
+            background: rgba(255, 193, 7, 0.2) !important;
+            border: 1px solid rgba(255, 193, 7, 0.4) !important;
+            text-align: center !important;
+            margin: 10px auto !important;
+            max-width: 90% !important;
+            font-style: italic;
+        }
+
+        .chat-message .sender-name {
+            font-weight: 600;
+            font-size: 0.85em;
+            margin-bottom: 3px;
+            color: #e0e0e0;
+        }
+
+        .chat-message .message-text {
+            margin: 5px 0;
+            line-height: 1.4;
+        }
+
+        .chat-message .message-time {
+            font-size: 0.7em;
+            opacity: 0.7;
+            margin-top: 3px;
+        }
+
+        .message-status {
+            font-size: 0.7em;
+            color: #4CAF50;
+            margin-left: 5px;
+        }
+
+        .chat-message.new-message {
+            animation: messagePop 0.3s ease-out;
+        }
+
+        @keyframes messagePop {
+            0% {
+                transform: scale(0.8);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Scrollbar personalizado para el chat */
+        #chatMessages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #chatMessages::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        #chatMessages::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Indicador de escritura */
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 5px 0;
+            font-style: italic;
+            color: #ccc;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 3px;
+        }
+
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% { 
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Mensajes rápidos */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 10px;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .quick-reply-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-reply-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input-group input {
+            flex-grow: 1;
+            padding: 10px 12px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .chat-input-group input:focus {
+            border-color: var(--color-verde-espoch);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+        }
+
+        .chat-input-group input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .chat-input-group button {
+            background: var(--color-verde-espoch);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .chat-input-group button:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+
+        .chat-input-group button:active {
+            transform: translateY(0);
+        }
+
+        /* Indicador de conexión */
+        .connection-status {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+            color: #4CAF50;
+        }
+
+        .connection-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4CAF50;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .driver-info-panel {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 20px;
+            text-align: left;
+            color: #eee;
+        }
+
+        /* Efectos hover */
+        .search-btn:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .logout-btn:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+        }
+
+        .profile-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Nuevos estilos para características premium */
+        .favorite-btn {
+            background: none;
+            border: none;
+            color: var(--color-oro);
+            font-size: 1.2em;
+            cursor: pointer;
+            margin-left: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .favorite-btn:hover {
+            transform: scale(1.3);
+        }
+
+        .favorite-btn.active {
+            animation: bounce 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.5); }
+        }
+
+        .trip-history-panel {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 15px;
+            text-align: left;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        /* Botones flotantes */
+        .floating-btn {
+            position: fixed;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .voice-btn {
+            bottom: 90px;
+            right: 20px;
+            background: var(--color-verde-espoch);
+        }
+
+        .emergency-btn {
+            bottom: 160px;
+            right: 20px;
+            background: var(--color-rojo-claro);
+            animation: pulse 2s infinite;
+        }
+
+        .history-btn {
+            bottom: 230px;
+            right: 20px;
+            background: var(--color-azul);
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* Badge de conductor favorito */
+        .favorite-badge {
+            background: linear-gradient(135deg, var(--color-oro), #FFA500);
+            color: #333;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 0.7em;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        /* Botón para salir del chat */
+        .exit-chat-btn {
+            background: #666 !important;
+            margin-top: 10px;
+        }
+        .exit-chat-btn:hover {
+            background: #777 !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Botones flotantes -->
+    <button class="floating-btn voice-btn" onclick="toggleVoiceRecognition()">🎤</button>
+    <button class="floating-btn emergency-btn" onclick="handleEmergency()">🆘</button>
+    <button class="floating-btn history-btn" onclick="showTripHistory()">📋</button>
+
+    <div class="particles"></div>
+    <div class="main-panel" id="requestPanel">
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img id="passengerProfilePic" src="/img/default_avatar.jpg" style="width: 40px; height: 40px; border-radius: 50%; border: 2px solid white; object-fit: cover;">
+                <div>
+                    <h1 style="margin: 0;">Hola, <span id="userNameDisplay">Pasajero</span>! 👋</h1>
+                    <p class="role-text" style="margin: 0; font-size: 0.9em;">
+                        Pasajero Premium UniRiders 
+                        <span class="achievement-badge" style="background: var(--color-oro); color: #333; padding: 2px 6px; border-radius: 8px; font-size: 0.7em; margin-left: 5px;">⭐ 4.9</span>
+                    </p>
+                </div>
+            </div>
+            <button class="profile-btn">⚙️</button>
+        </div>
+
+        <!-- Panel de historial de viajes -->
+        <div class="trip-history-panel" id="tripHistoryPanel" style="display: none;">
+            <h4>📋 Mis Últimos Viajes</h4>
+            <div id="historyList">
+                <div class="history-item">
+                    <div>
+                        <strong>ESPOCH → Terminal</strong>
+                        <div style="font-size: 0.8em; color: #ccc;">Cargando...</div>
+                    </div>
+                    <div class="rating-stars" style="color: var(--color-oro);">-----</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="search-form">
+            <input type="text" id="origen" placeholder="📍 Origen (Ej: Sede Centro)">
+            <input type="text" id="destino" placeholder="🏁 Destino (Ej: Sede Norte)">
+            <select id="paymentMethod">
+                <option value="Efectivo">Efectivo 💵</option>
+                <option value="Tarjeta">Transferencia 💳</option>
+            </select>
+            <button class="search-btn" id="requestRideBtn">🚀 Solicitar Viaje Premium</button>
+        </div>
+
+        <div class="message-area" id="messageArea">
+            💫 Ingresa tu destino y viaja con los mejores conductores
+        </div>
+    </div>
+
+    <div id="activeTripPanel" class="main-panel" style="display: none; padding-top: 0; margin-top: 20px; max-width: 500px;">
+        <div class="connection-status">
+            <div class="connection-dot"></div>
+            <span>Conectado</span>
+        </div>
+        
+        <h3 style="margin-bottom: 15px;">🚗 Tu Viaje Activo</h3>
+        
+        <div class="driver-info-panel">
+            <h4>
+                Conductor: <span id="activeTripDriverName"></span>
+                <button class="favorite-btn" id="favoriteBtn" onclick="toggleFavorite()">⭐</button>
+                <span class="favorite-badge" id="favoriteBadge" style="display: none;">Favorito</span>
+            </h4>
+            <p>📍 De: <strong id="activeTripOriginDisplay"></strong></p>
+            <p>🏁 A: <strong id="activeTripDestinationDisplay"></strong></p>
+            <p>⏱️ Tiempo estimado: <strong id="passengerEstimatedTime">15 min</strong></p>
+            <p>💰 Precio estimado: <strong id="estimatedPrice">$3.50</strong></p>
+        </div>
+
+        <div id="map" class="active"></div> 
+        <p style="margin-top: 10px; font-size: 0.9em;">Conductor: <span id="driverMapCoords"></span></p>
+
+        <div class="chat-container active">
+            <h4>💬 Chat con Conductor</h4>
+            <div id="chatMessages"></div>
+            <div class="chat-input-group">
+                <input type="text" id="chatInput" placeholder="Escribe un mensaje...">
+                <button id="sendChatBtn">Enviar</button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="search-btn" style="background: var(--color-verde-espoch); flex: 1;" onclick="shareTrip()">
+                📤 Compartir Viaje
+            </button>
+            <button class="search-btn" style="background: var(--color-rojo-claro); flex: 1;" onclick="cancelTrip()">
+                ❌ Cancelar Viaje
+            </button>
+        </div>
+        
+        <!-- NUEVO BOTÓN PARA SALIR DEL CHAT -->
+        <button class="search-btn exit-chat-btn" onclick="exitChat()">
+            👋 Salir del Chat
+        </button>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const API = "http://localhost:3000/api";
+        
+        // OBTENER DATOS CON SISTEMA DE SESIONES
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('sessionId') || localStorage.getItem('currentSessionId');
+        const userName = localStorage.getItem(sessionId + '_userName') || 'Pasajero';
+        const userEmail = localStorage.getItem(sessionId + '_userEmail');
+        const userRole = localStorage.getItem(sessionId + '_userRole');
+
+        document.getElementById('userNameDisplay').innerText = userName.split(' ')[0]; 
+        
+        const requestPanel = document.getElementById('requestPanel');
+        const activeTripPanel = document.getElementById('activeTripPanel');
+        const requestRideBtn = document.getElementById('requestRideBtn');
+        const messageArea = document.getElementById('messageArea');
+        const mapElement = document.getElementById('map');
+        const driverMapCoords = document.getElementById('driverMapCoords');
+
+        let currentTripId = null;
+        let pollingStatusInterval = null;
+        let currentChatInterval = null;
+        let driverLocationPolling = null;
+        let currentDriverName = null;
+        let typingTimeout = null;
+        let isTyping = false;
+        let voiceRecognition = null;
+        let favoriteDrivers = JSON.parse(localStorage.getItem('favorite_drivers') || '{}');
+
+        // =============================================
+        // FUNCIONALIDADES MEJORADAS PARA PASAJEROS
+        // =============================================
+
+        // Función mejorada para cargar historial de viajes del pasajero
+        async function loadPassengerTripHistory() {
+            try {
+                const res = await fetch(`${API}/trips/history`, {
+                    headers: {
+                        'user-email': userEmail,
+                        'user-role': userRole,
+                        'session-id': sessionId
+                    }
+                });
+                
+                const history = await res.json();
+                const historyList = document.getElementById('historyList');
+                
+                if (history.length === 0) {
+                    historyList.innerHTML = '<div style="text-align: center; color: #ccc; padding: 20px;">No hay viajes anteriores</div>';
+                    return;
+                }
+                
+                historyList.innerHTML = '';
+                history.forEach(trip => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    
+                    const stars = trip.calificacion_conductor ? 
+                        '★'.repeat(trip.calificacion_conductor) + '☆'.repeat(5 - trip.calificacion_conductor) : 
+                        '★★★★★';
+                    
+                    const tripDate = new Date(trip.fecha_solicitud);
+                    const formattedDate = tripDate.toLocaleDateString('es-ES', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    
+                    historyItem.innerHTML = `
+                        <div>
+                            <strong>${trip.origen} → ${trip.destino}</strong>
+                            <div style="font-size: 0.8em; color: #ccc;">
+                                ${formattedDate}
+                                ${trip.estado === 'COMPLETADO' ? ' - Completado' : ' - En curso'}
+                                ${trip.costo ? ` - $${trip.costo}` : ''}
+                            </div>
+                        </div>
+                        <div class="rating-stars" style="color: var(--color-oro);">${stars}</div>
+                    `;
+                    
+                    historyList.appendChild(historyItem);
+                });
+                
+            } catch (error) {
+                console.error('Error cargando historial:', error);
+                const historyList = document.getElementById('historyList');
+                historyList.innerHTML = '<div style="text-align: center; color: #ccc; padding: 20px;">Error cargando historial</div>';
+            }
+        }
+
+        // Función mejorada para mostrar historial de viajes
+        function showTripHistory() {
+            // Redirigir a la página central de historial con la sesión actual
+            window.location.href = `trip-history.html?sessionId=${sessionId}`;
+        }
+
+        // Función para salir del chat cuando el viaje finaliza
+        function exitChat() {
+            if (confirm("¿Salir del chat? Podrás ver el historial completo más tarde.")) {
+                resetUI();
+                showToast('Chat cerrado. El historial se guardó correctamente.', true);
+            }
+        }
+
+        // Sistema de comandos de voz
+        function setupVoiceRecognition() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                voiceRecognition = new SpeechRecognition();
+                voiceRecognition.continuous = false;
+                voiceRecognition.lang = 'es-ES';
+                voiceRecognition.interimResults = false;
+
+                voiceRecognition.onresult = (event) => {
+                    const command = event.results[0][0].transcript.toLowerCase();
+                    handleVoiceCommand(command);
+                };
+
+                voiceRecognition.onerror = (event) => {
+                    console.log('Error en reconocimiento de voz:', event.error);
+                };
+            }
+        }
+
+        function toggleVoiceRecognition() {
+            if (voiceRecognition) {
+                try {
+                    voiceRecognition.start();
+                    showToast('🎤 Escuchando... Di "solicitar viaje" o "cancelar viaje"', true);
+                    
+                    setTimeout(() => {
+                        if (voiceRecognition) {
+                            voiceRecognition.stop();
+                        }
+                    }, 5000);
+                } catch (error) {
+                    showToast('❌ Error al activar el micrófono', false);
+                }
+            } else {
+                showToast('❌ Reconocimiento de voz no disponible', false);
+            }
+        }
+
+        function handleVoiceCommand(command) {
+            console.log('Comando de voz:', command);
+            
+            if (command.includes('solicitar viaje') || command.includes('pedir viaje')) {
+                if (!currentTripId) {
+                    requestRideBtn.click();
+                    showToast('✅ Viaje solicitado por voz', true);
+                }
+            } else if (command.includes('cancelar viaje') || command.includes('cancelar')) {
+                if (currentTripId) {
+                    cancelTrip();
+                    showToast('✅ Viaje cancelado por voz', true);
+                }
+            } else if (command.includes('compartir viaje') || command.includes('compartir')) {
+                shareTrip();
+            } else if (command.includes('historial') || command.includes('mis viajes')) {
+                showTripHistory();
+            } else if (command.includes('salir chat') || command.includes('salir')) {
+                exitChat();
+            } else {
+                showToast('❌ Comando no reconocido: ' + command, false);
+            }
+        }
+
+        // Botón de emergencia
+        function handleEmergency() {
+            if (confirm('🚨 ¿ESTÁS EN UNA SITUACIÓN DE EMERGENCIA?\n\nSe enviará tu ubicación a los contactos de emergencia y se notificará a las autoridades.')) {
+                const location = { lat: -1.65, lng: -78.68 }; // Ubicación simulada
+                
+                fetch(`${API}/emergency/alert`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userEmail: userEmail,
+                        location: location,
+                        message: 'Alerta de emergencia desde la app UniRiders - Pasajero',
+                        tripId: currentTripId
+                    })
+                }).then(() => {
+                    showToast('🚨 ALERTA DE EMERGENCIA ENVIADA', false);
+                    
+                    if (navigator.vibrate) {
+                        navigator.vibrate([500, 200, 500, 200, 500]);
+                    }
+                }).catch(error => {
+                    showToast('✅ Alerta enviada (modo offline)', false);
+                });
+            }
+        }
+
+        // Sistema de favoritos
+        function toggleFavorite() {
+            const driverName = document.getElementById('activeTripDriverName').textContent;
+            const favoriteBtn = document.getElementById('favoriteBtn');
+            const favoriteBadge = document.getElementById('favoriteBadge');
+            
+            if (favoriteDrivers[driverName]) {
+                delete favoriteDrivers[driverName];
+                favoriteBtn.style.color = '#ccc';
+                favoriteBadge.style.display = 'none';
+                showToast(`❌ ${driverName} removido de favoritos`, true);
+            } else {
+                favoriteDrivers[driverName] = true;
+                favoriteBtn.style.color = 'var(--color-oro)';
+                favoriteBadge.style.display = 'inline';
+                favoriteBtn.classList.add('active');
+                setTimeout(() => favoriteBtn.classList.remove('active'), 500);
+                showToast(`⭐ ${driverName} agregado a favoritos`, true);
+            }
+            
+            localStorage.setItem('favorite_drivers', JSON.stringify(favoriteDrivers));
+        }
+
+        // Compartir viaje
+        function shareTrip() {
+            const tripDetails = {
+                origin: document.getElementById('activeTripOriginDisplay').textContent,
+                destination: document.getElementById('activeTripDestinationDisplay').textContent,
+                driver: document.getElementById('activeTripDriverName').textContent,
+                estimatedTime: document.getElementById('passengerEstimatedTime').textContent
+            };
+            
+            const shareText = `🚗 Estoy viajando con UniRiders\n📍 De: ${tripDetails.origin}\n🏁 A: ${tripDetails.destination}\n👤 Conductor: ${tripDetails.driver}\n⏱️ Llegada: ${tripDetails.estimatedTime}\n\n#UniRiders #ViajeSeguro`;
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Mi viaje UniRiders',
+                    text: shareText,
+                    url: window.location.href
+                });
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    showToast('✅ Información del viaje copiada al portapapeles', true);
+                });
+            }
+        }
+
+        // Sistema de calificaciones para pasajeros
+        function showPassengerRatingModal() {
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.8);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+            `;
+            
+            modal.innerHTML = `
+                <div style="background: white; padding: 30px; border-radius: 15px; text-align: center; max-width: 400px; color: #333;">
+                    <h3>⭐ Califica a tu conductor</h3>
+                    <p>¿Cómo fue tu experiencia con <strong>${currentDriverName || 'el conductor'}</strong>?</p>
+                    <div class="star-rating" style="font-size: 2em; margin: 20px 0;">
+                        ${'★'.repeat(5).split('').map((star, i) => 
+                            `<span style="color: #ccc; cursor: pointer; transition: color 0.3s;" 
+                                  onmouseover="highlightPassengerStars(this, ${i})" 
+                                  onclick="submitDriverRating(${i + 1})">${star}</span>`
+                        ).join('')}
+                    </div>
+                    <textarea id="driverRatingComment" placeholder="¿Algún comentario sobre el viaje?" 
+                              style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin: 10px 0; resize: vertical;"></textarea>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="skipDriverRating()" 
+                                style="background: #ccc; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; flex: 1;">
+                            Saltar
+                        </button>
+                        <button onclick="submitDriverRating()" 
+                                style="background: var(--color-verde-espoch); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; flex: 1;">
+                            Enviar
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            window.highlightPassengerStars = (element, index) => {
+                const stars = element.parentElement.children;
+                for (let i = 0; i < stars.length; i++) {
+                    stars[i].style.color = i <= index ? '#FFD700' : '#ccc';
+                }
+            };
+        }
+
+        function submitDriverRating(rating = 0) {
+            const comment = document.getElementById('driverRatingComment')?.value || '';
+            
+            if (currentTripId) {
+                fetch(`${API}/trips/${currentTripId}/rate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        rating: rating,
+                        comment: comment,
+                        ratedBy: 'passenger'
+                    })
+                }).then(() => {
+                    showToast('⭐ Calificación enviada. ¡Gracias!', true);
+                });
+            }
+            
+            document.querySelector('div[style*="position: fixed"]')?.remove();
+        }
+
+        function skipDriverRating() {
+            document.querySelector('div[style*="position: fixed"]')?.remove();
+        }
+
+        // =============================================
+        // CÓDIGO EXISTENTE (MEJORADO)
+        // =============================================
+
+        // Cargar foto de perfil desde la base de datos
+        function loadPassengerProfilePhoto() {
+            const passengerProfilePic = document.getElementById('passengerProfilePic');
+            
+            if (userEmail && passengerProfilePic) {
+                const timestamp = new Date().getTime();
+                passengerProfilePic.src = `http://localhost:3000/api/profile/${userEmail}/photo?t=${timestamp}`;
+            }
+        }
+
+        // Navegación al perfil
+        document.querySelector('.profile-btn').onclick = () => {
+             window.location.href = `profile.html?role=${userRole}&email=${userEmail}&sessionId=${sessionId}`;
+        };
+
+        // Cerrar sesión
+        async function logout() {
+            try {
+                await fetch(`${API}/logout`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'user-email': userEmail,
+                        'session-id': sessionId
+                    }
+                });
+            } catch (error) {
+                console.log('Error al cerrar sesión en servidor:', error);
+            }
+            
+            // Limpiar datos de esta sesión
+            if (sessionId) {
+                localStorage.removeItem(sessionId + '_userEmail');
+                localStorage.removeItem(sessionId + '_userName');
+                localStorage.removeItem(sessionId + '_userRole');
+                localStorage.removeItem('currentSessionId');
+            }
+            
+            window.location.href = 'Index.html';
+        }
+
+        // Lógica de Leaflet (mapa gratuito)
+        function initMap() {
+            map = L.map('map', { 
+                center: [-1.65, -78.68], 
+                zoom: 15,
+                zoomControl: false 
+            });
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(map);
+
+            const driverIcon = L.icon({
+                iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            });
+
+            const passengerIcon = L.icon({
+                iconUrl: 'https://cdn.rawgit.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41]
+            });
+
+            driverMarker = L.marker([0, 0], { icon: driverIcon });
+            
+            passengerMarker = L.marker([-1.65000, -78.68000], { icon: passengerIcon }).addTo(map);
+
+            map.setView([-1.65, -78.68], 15);
+        }
+
+        // Lógica de solicitud de viaje y estado (polling)
+        async function checkTripStatus() {
+            if (!currentTripId) return;
+
+            try {
+                const res = await fetch(`${API}/trips/${currentTripId}/status`, {
+                    headers: {
+                        'user-email': userEmail,
+                        'session-id': sessionId
+                    }
+                });
+                const data = await res.json();
+
+                if (data.status === 'ACEPTADO') {
+                    clearInterval(pollingStatusInterval);
+                    pollingStatusInterval = null;
+
+                    requestPanel.style.display = 'none'; 
+                    activeTripPanel.style.display = 'block'; 
+                    mapElement.classList.add('active'); 
+                    
+                    currentDriverName = data.driver;
+                    document.getElementById('activeTripDriverName').innerText = currentDriverName;
+                    document.getElementById('activeTripOriginDisplay').innerText = document.getElementById('origen').value;
+                    document.getElementById('activeTripDestinationDisplay').innerText = document.getElementById('destino').value;
+
+                    // Verificar si el conductor es favorito
+                    const favoriteBtn = document.getElementById('favoriteBtn');
+                    const favoriteBadge = document.getElementById('favoriteBadge');
+                    if (favoriteDrivers[currentDriverName]) {
+                        favoriteBtn.style.color = 'var(--color-oro)';
+                        favoriteBadge.style.display = 'inline';
+                    }
+
+                    driverMarker.addTo(map);
+                    startChatSession(currentTripId);
+                    startDriverLocationPolling(currentTripId);
+
+                } else if (data.status === 'PENDIENTE') {
+                    messageArea.innerText = "🔄 Esperando que un conductor acepte la oferta...";
+                } else if (data.status === 'FINALIZADO') {
+                    // VIAJE FINALIZADO AUTOMÁTICAMENTE
+                    clearInterval(pollingStatusInterval);
+                    pollingStatusInterval = null;
+                    
+                    showToast("🏁 Viaje finalizado por el conductor", true);
+                    
+                    // Mostrar modal de calificación
+                    setTimeout(() => {
+                        showPassengerRatingModal();
+                    }, 1000);
+                    
+                    // Limpiar recursos
+                    if (driverLocationPolling) clearInterval(driverLocationPolling);
+                    if (currentChatInterval) clearInterval(currentChatInterval);
+                    
+                    // Resetear UI
+                    resetUI();
+                }
+            } catch (error) {
+                console.error("Error al consultar estado:", error);
+            }
+        }
+
+        async function startDriverLocationPolling(tripId) {
+            driverLocationPolling = setInterval(async () => {
+                try {
+                    const res = await fetch(`${API}/trips/${tripId}/driverLocation`, {
+                        headers: {
+                            'user-email': userEmail,
+                            'session-id': sessionId
+                        }
+                    });
+                    const data = await res.json();
+                    
+                    if (data && map && driverMarker) {
+                        const driverPos = [parseFloat(data.lat), parseFloat(data.lon)];
+                        
+                        driverMarker.setLatLng(driverPos);
+                        driverMapCoords.innerText = `Lat: ${data.lat}, Lon: ${data.lon}`;
+                        map.setView(driverPos, map.getZoom()); 
+                    }
+                } catch (error) {
+                    console.error("Error al obtener ubicación del conductor:", error);
+                }
+            }, 3000); 
+        }
+
+        requestRideBtn.addEventListener('click', async () => {
+            const origin = document.getElementById('origen').value.trim();
+            const destination = document.getElementById('destino').value.trim();
+            const paymentMethod = document.getElementById('paymentMethod').value;
+
+            if (!origin || !destination) {
+                messageArea.innerText = "🚨 Ingresa origen y destino.";
+                return;
+            }
+
+            requestRideBtn.disabled = true;
+            requestRideBtn.innerText = 'Enviando solicitud...';
+
+            try {
+                const res = await fetch(`${API}/trips/request`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'user-email': userEmail,
+                        'session-id': sessionId
+                    },
+                    body: JSON.stringify({ 
+                        passengerName: userName, 
+                        passengerEmail: userEmail,
+                        origin, 
+                        destination, 
+                        paymentMethod 
+                    })
+                });
+                const data = await res.json();
+                
+                currentTripId = data.tripId;
+                
+                messageArea.innerText = data.message;
+                requestRideBtn.innerText = 'Buscando conductor... 🔄';
+                pollingStatusInterval = setInterval(checkTripStatus, 4000); 
+
+            } catch (error) {
+                messageArea.innerText = "❌ Error al solicitar el viaje.";
+                requestRideBtn.disabled = false;
+                requestRideBtn.innerText = 'Solicitar Viaje 🚀';
+            }
+        });
+
+        // Resetear UI y limpiar recursos
+        function resetUI() {
+            currentTripId = null;
+            currentDriverName = null;
+            if (pollingStatusInterval) clearInterval(pollingStatusInterval);
+            if (currentChatInterval) clearInterval(currentChatInterval);
+            if (driverLocationPolling) clearInterval(driverLocationPolling);
+            
+            requestPanel.style.display = 'block';
+            activeTripPanel.style.display = 'none';
+            mapElement.classList.remove('active');
+            requestRideBtn.disabled = false;
+            requestRideBtn.innerText = 'Solicitar Viaje 🚀';
+            messageArea.innerText = '💫 Ingresa tu destino y viaja con los mejores conductores';
+            
+            if (driverMarker) driverMarker.remove(); 
+        }
+
+        // Cancelar viaje con confirmación y limpieza de chat
+        function cancelTrip(isFinalized = false) {
+            if (isFinalized) {
+                // Mostrar modal de calificación cuando el conductor finaliza
+                setTimeout(() => {
+                    showPassengerRatingModal();
+                }, 1000);
+                
+                // Limpiar chat cuando el conductor finaliza el viaje
+                if (currentTripId) {
+                    fetch(`${API}/chat/${currentTripId}/clear`, {
+                        method: 'POST'
+                    }).catch(err => console.error('Error limpiando chat:', err));
+                }
+                alert("¡El conductor ha finalizado el viaje!");
+                resetUI();
+            } else if (confirm("¿Estás seguro de que quieres cancelar el viaje?")) {
+                // Limpiar chat al cancelar
+                if (currentTripId) {
+                    fetch(`${API}/chat/${currentTripId}/clear`, {
+                        method: 'POST'
+                    }).catch(err => console.error('Error limpiando chat:', err));
+                }
+                
+                // Cancelar viaje en el servidor
+                fetch(`${API}/trips/cancel`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'user-email': userEmail,
+                        'session-id': sessionId
+                    },
+                    body: JSON.stringify({ tripId: currentTripId })
+                }).catch(err => console.error('Error cancelando viaje:', err));
+                
+                alert("Viaje cancelado.");
+                resetUI();
+            }
+        }
+        window.cancelTrip = cancelTrip;
+
+        // Lógica de chat mejorada
+        const chatInput = document.getElementById('chatInput');
+        const sendChatBtn = document.getElementById('sendChatBtn');
+        const chatMessagesDiv = document.getElementById('chatMessages');
+
+        function startChatSession(tripId) {
+            console.log("🟡 Pasajero iniciando sesión de chat para viaje:", tripId);
+            
+            document.querySelector('.chat-container').classList.add('active');
+            
+            const fetchMessages = async () => {
+                try {
+                    const [messagesRes, typingRes] = await Promise.all([
+                        fetch(`${API}/chat/${tripId}/messages`),
+                        fetch(`${API}/chat/${tripId}/typing`)
+                    ]);
+                    
+                    if (!messagesRes.ok) throw new Error('Error en respuesta del servidor');
+                    
+                    const messages = await messagesRes.json();
+                    const typingData = await typingRes.json();
+                    
+                    updateChatMessages(messages);
+                    updateTypingIndicator(typingData.typing);
+                    
+                } catch (error) {
+                    console.log("⚠️ Error al obtener mensajes:", error);
+                }
+            };
+
+            const updateChatMessages = (messages) => {
+                chatMessagesDiv.innerHTML = '';
+                messages.forEach(msg => {
+                    const msgElement = document.createElement('div');
+                    msgElement.classList.add('chat-message');
+                    msgElement.setAttribute('data-message-id', msg.messageId || msg.timestamp);
+                    
+                    const isOwnMessage = msg.sender === userName;
+                    const isSystemMessage = msg.type === "system";
+                    
+                    if (isSystemMessage) {
+                        msgElement.classList.add('system');
+                    } else {
+                        msgElement.classList.add(isOwnMessage ? 'self' : 'other');
+                    }
+                    
+                    msgElement.innerHTML = `
+                        ${!isSystemMessage ? `<div class="sender-name">${msg.sender}</div>` : ''}
+                        <div class="message-text">${msg.message}</div>
+                        <div class="message-time">${msg.displayTime || msg.timestamp}</div>
+                        ${isOwnMessage ? '<div class="message-status">✓</div>' : ''}
+                    `;
+                    
+                    chatMessagesDiv.appendChild(msgElement);
+                });
+                
+                chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+            };
+
+            const updateTypingIndicator = (typingUsers) => {
+                const existingIndicator = document.getElementById('typing-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+                
+                if (typingUsers.length > 0) {
+                    const typingIndicator = document.createElement('div');
+                    typingIndicator.id = 'typing-indicator';
+                    typingIndicator.className = 'typing-indicator';
+                    typingIndicator.innerHTML = `
+                        <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="typing-text">${typingUsers[0]} está escribiendo...</div>
+                    `;
+                    chatMessagesDiv.appendChild(typingIndicator);
+                    chatMessagesDiv.scrollTop = chatMessagesDiv.scrollHeight;
+                }
+            };
+
+            const sendMessage = async () => {
+                const message = chatInput.value.trim();
+                if (message === "") return;
+
+                // Indicar que dejó de escribir
+                await updateTypingStatus(false);
+
+                try {
+                    const res = await fetch(`${API}/chat/${tripId}/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            sender: userName, 
+                            message: message 
+                        })
+                    });
+                    
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        chatInput.value = '';
+                        // Actualizar mensajes inmediatamente después de enviar
+                        setTimeout(fetchMessages, 100);
+                    } else {
+                        showMessageError('Error al enviar mensaje');
+                    }
+                } catch (error) {
+                    console.error('❌ Error de conexión al enviar mensaje:', error);
+                    showMessageError('Error de conexión');
+                }
+            };
+
+            const updateTypingStatus = async (typing) => {
+                if (isTyping === typing) return;
+                
+                isTyping = typing;
+                
+                try {
+                    await fetch(`${API}/chat/${tripId}/typing`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            sender: userName, 
+                            isTyping: typing 
+                        })
+                    });
+                } catch (error) {
+                    // Silenciar errores de typing
+                }
+            };
+
+            const handleTyping = () => {
+                if (!isTyping) {
+                    updateTypingStatus(true);
+                }
+                
+                clearTimeout(typingTimeout);
+                typingTimeout = setTimeout(() => {
+                    updateTypingStatus(false);
+                }, 1000);
+            };
+
+            const showMessageError = (message) => {
+                const errorMsg = document.createElement('div');
+                errorMsg.className = 'message-error';
+                errorMsg.textContent = message;
+                errorMsg.style.cssText = `
+                    background: #ff4444;
+                    color: white;
+                    padding: 8px 12px;
+                    border-radius: 10px;
+                    margin: 5px 0;
+                    text-align: center;
+                    font-size: 0.8em;
+                `;
+                chatMessagesDiv.appendChild(errorMsg);
+                setTimeout(() => errorMsg.remove(), 3000);
+            };
+
+            // Configurar eventos
+            sendChatBtn.onclick = sendMessage;
+            
+            chatInput.addEventListener('input', handleTyping);
+            
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Agregar botones de mensajes rápidos
+            addQuickReplies(tripId);
+
+            // Cargar mensajes iniciales
+            fetchMessages();
+            
+            // Polling más eficiente
+            if (currentChatInterval) clearInterval(currentChatInterval);
+            currentChatInterval = setInterval(fetchMessages, 1500); // Actualizar cada 1.5 segundos
+        }
+
+        // Función para agregar mensajes rápidos
+        function addQuickReplies(tripId) {
+            const quickReplies = [
+                "¿En cuánto tiempo llegas?",
+                "Estoy esperando en la entrada",
+                "¿Puedes llegar más rápido?",
+                "Gracias por el viaje",
+                "Llegué bien, gracias"
+            ];
+            
+            const quickRepliesContainer = document.createElement('div');
+            quickRepliesContainer.className = 'quick-replies';
+            
+            quickReplies.forEach(reply => {
+                const button = document.createElement('button');
+                button.textContent = reply;
+                button.className = 'quick-reply-btn';
+                button.onclick = () => {
+                    chatInput.value = reply;
+                    sendChatBtn.click();
+                };
+                quickRepliesContainer.appendChild(button);
+            });
+            
+            chatMessagesDiv.parentNode.insertBefore(quickRepliesContainer, chatMessagesDiv);
+        }
+
+        // Función para mostrar notificaciones
+        function showToast(message, success) {
+            const toast = document.getElementById('toast');
+            if (toast) {
+                toast.textContent = message;
+                toast.style.background = success ? 
+                    "linear-gradient(135deg, #4CAF50, #45a049)" : 
+                    "linear-gradient(135deg, #ff4444, #cc0000)";
+                toast.classList.add("show");
+                
+                setTimeout(() => toast.classList.remove("show"), 4000);
+            }
+        }
+
+        // Función para reanudar viaje como pasajero - NUEVA
+        async function resumePassengerTrip(tripId) {
+            try {
+                showToast('🔄 Reanudando viaje activo...', true);
+                
+                const res = await fetch(`${API}/trips/${tripId}/status`, {
+                    headers: {
+                        'user-email': userEmail,
+                        'session-id': sessionId
+                    }
+                });
+                
+                const data = await res.json();
+                
+                if (data.status === 'ACEPTADO') {
+                    currentTripId = tripId;
+                    
+                    requestPanel.style.display = 'none'; 
+                    activeTripPanel.style.display = 'block'; 
+                    mapElement.classList.add('active'); 
+                    
+                    currentDriverName = data.driver;
+                    document.getElementById('activeTripDriverName').innerText = currentDriverName;
+                    
+                    // Obtener detalles completos del viaje
+                    const detailsRes = await fetch(`${API}/trips/${tripId}/details`, {
+                        headers: {
+                            'user-email': userEmail,
+                            'session-id': sessionId
+                        }
+                    });
+                    
+                    const tripDetails = await detailsRes.json();
+                    
+                    document.getElementById('activeTripOriginDisplay').innerText = tripDetails.origen;
+                    document.getElementById('activeTripDestinationDisplay').innerText = tripDetails.destino;
+                    
+                    // Verificar si el conductor es favorito
+                    const favoriteBtn = document.getElementById('favoriteBtn');
+                    const favoriteBadge = document.getElementById('favoriteBadge');
+                    if (favoriteDrivers[currentDriverName]) {
+                        favoriteBtn.style.color = 'var(--color-oro)';
+                        favoriteBadge.style.display = 'inline';
+                    }
+
+                    driverMarker.addTo(map);
+                    startChatSession(currentTripId);
+                    startDriverLocationPolling(currentTripId);
+                    
+                    showToast('✅ Viaje reanudado correctamente', true);
+                    
+                } else {
+                    showToast('❌ El viaje ya no está activo', false);
+                    // Redirigir de vuelta al historial
+                    setTimeout(() => {
+                        window.location.href = `trip-history.html?sessionId=${sessionId}`;
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                console.error('Error reanudar viaje:', error);
+                showToast('❌ Error al reanudar el viaje', false);
+            }
+        }
+
+        // Añadir función para actualizar badge dinámico
+        async function updatePassengerAchievementBadge() {
+            if (!userEmail) return;
+            try {
+                const res = await fetch(`${API}/profile/${userEmail}`);
+                if (!res.ok) return;
+                const data = await res.json();
+                const badge = document.querySelector('.achievement-badge');
+                if (badge && data.user && data.user.avgRating != null) {
+                    badge.textContent = `⭐ ${parseFloat(data.user.avgRating).toFixed(1)}`;
+                }
+            } catch (err) {
+                console.error('Error cargando rating pasajero:', err);
+            }
+        }
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            loadPassengerProfilePhoto();
+            setupVoiceRecognition();
+            // Reanudar viaje, historial, etc...
+            // Actualizar badge con la calificación real
+            updatePassengerAchievementBadge();
+            // ...existing code...
+        });
+    </script>
+</body>
+</html>
