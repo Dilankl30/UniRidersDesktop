@@ -649,3 +649,126 @@ body.dark-mode .input-container select {
   margin-top: 5px;
   text-align: center;
 }
+/* =========================================================
+   DISEÑO RESPONSIVO PARA ENTORNOS MÓVILES
+   ========================================================= */
+@media (max-width: 900px) {
+  body {
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 32px 16px 40px;
+  }
+
+  .auth-container {
+    max-width: 480px;
+    width: 100%;
+  }
+
+  .auth-card {
+    padding: 24px 20px;
+    min-height: auto;
+  }
+
+  .auth-form {
+    position: relative;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
+
+  .button-switcher {
+    gap: 10px;
+  }
+
+  .button-switcher button {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+
+  .live-stats {
+    position: static;
+    width: 100%;
+    margin: 0 0 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    text-align: left;
+  }
+
+  .stat-item {
+    justify-content: flex-start;
+  }
+
+  .theme-toggle {
+    top: 12px;
+    right: 12px;
+    width: 44px;
+    height: 44px;
+  }
+
+  .profile-card {
+    padding: 24px 20px;
+    width: 100%;
+    max-width: 460px;
+  }
+
+  .profile-photo-container {
+    width: 110px;
+    height: 110px;
+  }
+
+  .field-group {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .toast {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 500px) {
+  body {
+    padding: 24px 12px 32px;
+  }
+
+  .logo {
+    font-size: 1.8rem;
+  }
+
+  .auth-card {
+    padding: 20px 16px;
+  }
+
+  .auth-card .input-container input,
+  .auth-card .input-container select,
+  .profile-card .input-container input,
+  .profile-card .input-container select {
+    font-size: 15px;
+  }
+
+  .auth-card .submit-btn,
+  .profile-card .submit-btn {
+    font-size: 15px;
+    padding: 12px;
+  }
+
+  .button-switcher {
+    flex-direction: column;
+  }
+
+  .button-switcher button {
+    width: 100%;
+  }
+
+  .live-stats {
+    font-size: 0.85em;
+    grid-template-columns: 1fr;
+  }
+
+  .theme-toggle {
+    width: 40px;
+    height: 40px;
+  }
+}

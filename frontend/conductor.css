@@ -198,3 +198,80 @@ body {
     text-align: left;
     color: #eee;
 }
+@media (max-width: 900px) {
+    body {
+        height: auto;
+        padding: 24px 12px 40px;
+    }
+
+    .main-panel {
+        max-width: 100%;
+        padding: 24px;
+    }
+
+    .header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .status-toggle {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .offers-list {
+        max-height: 220px;
+    }
+
+    #map {
+        height: 240px;
+    }
+
+    .chat-container,
+    .offers-panel,
+    .driver-info-panel {
+        margin-top: 16px;
+    }
+
+    .chat-input-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .chat-input-group button,
+    .logout-btn,
+    .accept-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    body {
+        padding: 20px 10px 32px;
+    }
+
+    .main-panel {
+        padding: 20px 16px;
+        border-radius: 16px;
+    }
+
+    .status-btn {
+        width: 100%;
+    }
+
+    .chat-message {
+        max-width: 100%;
+        font-size: 0.95em;
+    }
+
+    .quick-replies {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .quick-reply-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

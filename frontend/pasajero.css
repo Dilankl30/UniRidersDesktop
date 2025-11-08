@@ -158,3 +158,65 @@ body {
     text-align: left;
     color: #eee;
 }
+@media (max-width: 900px) {
+    body {
+        height: auto;
+        padding: 24px 12px 40px;
+    }
+
+    .main-panel {
+        max-width: 100%;
+        padding: 24px;
+    }
+
+    #map {
+        height: 240px;
+    }
+
+    .search-form {
+        gap: 12px;
+    }
+
+    .message-area {
+        font-size: 1em;
+        min-height: 70px;
+    }
+
+    .chat-container,
+    .driver-info-panel {
+        margin-top: 16px;
+    }
+
+    .chat-input-group {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .chat-input-group button,
+    .logout-btn,
+    .search-btn {
+        width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    body {
+        padding: 20px 10px 32px;
+    }
+
+    .main-panel {
+        padding: 20px 16px;
+        border-radius: 16px;
+    }
+
+    .search-form input,
+    .search-form select,
+    .search-btn {
+        font-size: 15px;
+    }
+
+    .chat-message {
+        max-width: 100%;
+        font-size: 0.95em;
+    }
+}
