@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Derivadas de Segundo Grado</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap">
+    <link rel="stylesheet" href="calculadora-derivadas.css">
+</head>
+<body>
+    <main class="calculator-container">
+        <section class="intro">
+            <h1>Calculadora de Derivadas</h1>
+            <p>Ingresa los coeficientes de una función cuadrática <strong>f(x) = ax² + bx + c</strong> y descubre su derivada, así como los puntos de máximo o mínimo.</p>
+        </section>
+
+        <section class="calculator-card" aria-labelledby="calculator-title">
+            <h2 id="calculator-title">Configura tu función</h2>
+            <form id="quadratic-form">
+                <div class="input-group">
+                    <label for="coef-a">Coeficiente a</label>
+                    <input type="number" id="coef-a" name="coef-a" placeholder="Ej. 1" step="0.01" required>
+                    <span class="hint">Controla la apertura de la parábola. No puede ser 0.</span>
+                </div>
+                <div class="input-group">
+                    <label for="coef-b">Coeficiente b</label>
+                    <input type="number" id="coef-b" name="coef-b" placeholder="Ej. -4" step="0.01" required>
+                    <span class="hint">Desplaza el vértice horizontalmente.</span>
+                </div>
+                <div class="input-group">
+                    <label for="coef-c">Coeficiente c</label>
+                    <input type="number" id="coef-c" name="coef-c" placeholder="Ej. 3" step="0.01" required>
+                    <span class="hint">Ajusta el cruce con el eje Y.</span>
+                </div>
+                <button type="submit" class="primary-button">Calcular</button>
+            </form>
+        </section>
+
+        <section class="results" id="results" hidden>
+            <h2>Resultados</h2>
+            <div class="result-card">
+                <h3>Función cuadrática</h3>
+                <p><strong>f(x) =</strong> <span id="original-function">ax² + bx + c</span></p>
+            </div>
+            <div class="result-card" role="status">
+                <h3>Derivadas</h3>
+                <p><strong>Primera derivada:</strong> <span id="first-derivative">2ax + b</span></p>
+                <p><strong>Segunda derivada:</strong> <span id="second-derivative">2a</span></p>
+            </div>
+            <div class="result-card">
+                <h3>Punto crítico</h3>
+                <p><strong>x*</strong> = <span id="critical-x">0</span></p>
+                <p><strong>f(x*)</strong> = <span id="critical-y">0</span></p>
+            </div>
+            <div class="result-card classification">
+                <h3>Clasificación</h3>
+                <p id="classification"></p>
+            </div>
+        </section>
+
+        <section class="steps" id="steps" hidden>
+            <h2>¿Cómo llegamos a estos resultados?</h2>
+            <ol>
+                <li>
+                    Calculamos la primera derivada de la función cuadrática: <strong id="step-derivative">f'(x) = 2ax + b</strong>.
+                </li>
+                <li>
+                    Igualamos la derivada a cero para encontrar el punto crítico: <strong id="step-equation">2ax + b = 0</strong>.
+                </li>
+                <li>
+                    Despejamos <strong>x*</strong> y evaluamos la función original para obtener <strong id="step-critical-point">(x*, f(x*))</strong>.
+                </li>
+                <li>
+                    Revisamos el signo de la segunda derivada <strong id="step-second-derivative">f''(x) = 2a</strong> para clasificar el punto como mínimo o máximo.
+                </li>
+            </ol>
+        </section>
+    </main>
+
+    <div class="toast" id="toast" role="alert" aria-live="assertive" aria-atomic="true" hidden>
+        <span id="toast-message"></span>
+        <button type="button" class="toast-close" aria-label="Cerrar notificación">&times;</button>
+    </div>
+
+    <script src="calculadora-derivadas.js"></script>
+</body>
+</html>
