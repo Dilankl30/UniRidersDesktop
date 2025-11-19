@@ -1,15 +1,16 @@
 const sql = require('mssql');
 
 const config = {
-  user: 'sa',          // ej: 'sa' o el que uses
-  password: 'sql123',   // ej: '12345'
-  server: 'localhost',         // o el nombre de tu instancia: 'localhost\\SQLEXPRESS'
+  user: 'sa',
+  password: 'sql123', // o la que uses
+  server: 'localhost\\SQLDEVELOPER', // o '.\\SQLDEVELOPER'
   database: 'UniRiders',
   options: {
-    encrypt: false, // true si usas Azure
+    encrypt: false,
     trustServerCertificate: true
   }
 };
+
 
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
